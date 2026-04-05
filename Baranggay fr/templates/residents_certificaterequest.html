@@ -1,0 +1,1011 @@
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Barangay Cubacub - Certificate Requests</title>
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;400;600&display=swap"
+            rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/background.css') }}">
+            <script src="{{ url_for('static', filename='js/background.js') }}"></script>
+
+        <style>
+            :root {
+                --dark-blue: #1c2136;
+                --main-background: #171b2d;
+                --sidebar-bg: #222841;
+                --primary-blue: #555ac8;
+                --light-text: #a8aabe;
+                --white-text: #ffffff;
+                --card-bg: #222841;
+                --lighter-bg: #2a304e;
+                --ai-bg: #2d324d;
+                --ai-bubble: #373e5a;
+                --user-bubble: #555ac8;
+                --important-yellow: #ffc107;
+                --success-green: #28a745;
+                --info-blue: #3498db;
+                --error-red: #e74c3c;
+                /* New color for error notifications */
+            }
+
+            /* === BODY === */
+            body {
+                margin: 0;
+                font-family: 'Exo 2', sans-serif;
+                color: var(--light-text);
+                background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                min-height: 100vh;
+                display: flex;
+                overflow: hidden;
+                position: relative;
+            }
+
+            /* === SIDEBAR === */
+            .sidebar {
+                width: 270px;
+                background: rgba(20, 24, 35, 0.9);
+                backdrop-filter: blur(10px);
+                box-shadow: 6px 0 30px rgba(0, 0, 0, 0.6);
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                display: flex;
+                flex-direction: column;
+                z-index: 2;
+            }
+
+            .sidebar-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .sidebar-logo {
+                width: 60px;
+                height: 60px;
+                border-radius: 15px;
+                overflow: hidden;
+                box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .sidebar-logo img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+            .barangay-title .barangay-name {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 15px;
+                font-weight: 700;
+                color: var(--light-text);
+            }
+
+            .barangay-title .portal-name {
+                font-size: 11px;
+                color: var(--muted-text);
+            }
+
+            .navigation-title {
+                padding: 10px 20px 5px;
+                font-size: 11px;
+                text-transform: uppercase;
+                color: var(--muted-text);
+                font-weight: 600;
+            }
+
+            .menu {
+                list-style: none;
+                margin: 0;
+                padding: 0 10px;
+                flex: 1;
+            }
+
+            .menu li a {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: var(--muted-text);
+                text-decoration: none;
+                transition: 0.3s;
+            }
+
+            .menu li.active a {
+                background: linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(168, 85, 247, 0.2));
+                color: var(--light-text);
+            }
+
+            .menu li a:hover {
+                background: rgba(255, 255, 255, 0.05);
+                color: #fff;
+            }
+
+            .profile-logout-section {
+                padding: 15px;
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
+                background: rgba(255, 255, 255, 0.02);
+            }
+
+            .user-profile {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .user-avatar {
+                width: 42px;
+                height: 42px;
+                border-radius: 10px;
+                background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+            }
+
+            .user-info .name {
+                font-weight: 700;
+                font-size: 13px;
+            }
+
+            .user-info .email {
+                font-size: 12px;
+                color: var(--muted-text);
+            }
+
+            .logout-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                color: #ff6b6b;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: 600;
+                padding: 10px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                transition: 0.3s;
+            }
+
+            .logout-btn:hover {
+                background: linear-gradient(90deg, rgba(0, 217, 255, 0.1), rgba(168, 85, 247, 0.1));
+                transform: translateY(-2px);
+            }
+
+            /* MAIN CONTENT STYLES */
+            .main-content {
+                flex: 1;
+                padding: 30px;
+                overflow-y: auto;
+                font-family: 'Exo 2', sans-serif;
+            }
+
+            .page-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .page-header h1 {
+                font-size: 32px;
+                font-weight: 700;
+                color: var(--white-text);
+                font-family: 'Orbitron', sans-serif;
+                line-height: 1.2;
+            }
+
+            .page-header p {
+                font-size: 14px;
+                color: var(--light-text);
+                font-family: 'Exo 2', sans-serif;
+                margin: 5px 0 0;
+            }
+
+            #live-datetime {
+                font-size: 14px;
+                font-weight: 600;
+                color: var(--light-text);
+                background-color: var(--card-bg);
+                padding: 8px 15px;
+                border-radius: 8px;
+                text-align: right;
+            }
+
+            .profile-card {
+                background: rgba(34, 40, 65, 0.8);
+                /* Transparent like dashboard card */
+                padding: 50px 30px;
+                border-radius: 12px;
+                font-family: 'Exo 2', sans-serif;
+                text-align: center;
+            }
+
+            .btn-primary {
+                background-color: var(--primary-blue);
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                font-family: 'Exo 2', sans-serif;
+            }
+
+            .btn-primary:hover {
+                background-color: #4a4fa8;
+            }
+
+            .info-field {
+                margin-bottom: 15px;
+            }
+
+            .info-field label {
+                display: block;
+                font-size: 12px;
+                color: var(--light-text);
+            }
+
+            .info-field input,
+            .info-field textarea,
+            .info-field select {
+                width: 100%;
+                padding: 10px;
+                border-radius: 6px;
+                border: 1px solid var(--dark-blue);
+                background: var(--main-background);
+                color: var(--white-text);
+                font-size: 14px;
+                box-sizing: border-box;
+            }
+
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 10;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0, 0, 0, 0.7);
+            }
+
+            .modal-content {
+                background-color: var(--card-bg);
+                margin: 10% auto;
+                padding: 25px;
+                border-radius: 12px;
+                width: 90%;
+                max-width: 600px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            }
+
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .modal-header h2 {
+                margin: 0;
+                font-size: 20px;
+            }
+
+            .close-btn {
+                color: var(--light-text);
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: color 0.2s;
+            }
+
+            .close-btn:hover,
+            .close-btn:focus {
+                color: var(--white-text);
+            }
+
+            .modal-footer {
+                padding-top: 20px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+            }
+
+            .btn-secondary {
+                background-color: transparent;
+                color: var(--light-text);
+                padding: 10px 20px;
+                border: 1px solid var(--light-text);
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .btn-secondary:hover {
+                background-color: var(--lighter-bg);
+                color: var(--white-text);
+            }
+
+            /* Payment Modal Styles */
+            .payment-choices {
+                display: flex;
+                gap: 20px;
+                justify-content: center;
+            }
+
+            .payment-option {
+                background-color: var(--lighter-bg);
+                border-radius: 12px;
+                padding: 30px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                flex: 1;
+                border: 2px solid transparent;
+            }
+
+            .payment-option:hover {
+                transform: translateY(-5px);
+                border-color: var(--primary-blue);
+            }
+
+            .payment-option i {
+                font-size: 40px;
+                margin-bottom: 15px;
+                color: var(--primary-blue);
+            }
+
+            .payment-option h3 {
+                margin: 0;
+                font-size: 18px;
+            }
+
+            .online-payment-view {
+                text-align: center;
+            }
+
+            .online-payment-view img {
+                max-width: 250px;
+                border-radius: 8px;
+                margin-bottom: 10px;
+            }
+
+            .online-payment-view .note {
+                font-size: 12px;
+                color: var(--light-text);
+                margin-bottom: 20px;
+            }
+
+            /* Chatbot Styles */
+            .chat-button {
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                width: 50px;
+                height: 50px;
+                background-color: var(--primary-blue);
+                border-radius: 50%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 20px;
+                cursor: pointer;
+                z-index: 90;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            }
+
+            .ai-assistant-modal {
+                display: none;
+                position: fixed;
+                bottom: 90px;
+                right: 30px;
+                width: 350px;
+                height: 500px;
+                background-color: var(--ai-bg);
+                border-radius: 12px;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+                flex-direction: column;
+                z-index: 100;
+            }
+
+            .ai-header {
+                padding: 15px;
+                background-color: var(--lighter-bg);
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+                color: var(--primary-blue);
+                font-weight: 600;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .ai-header span {
+                font-size: 12px;
+                color: var(--light-text);
+                font-weight: 400;
+            }
+
+            .ai-header i {
+                margin-right: 5px;
+            }
+
+            .ai-close-btn {
+                cursor: pointer;
+                font-size: 18px;
+                color: var(--light-text);
+            }
+
+            .ai-body {
+                padding: 15px;
+                flex-grow: 1;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            #chatMessagesContainer {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                flex-grow: 1;
+            }
+
+            .chat-message {
+                max-width: 85%;
+                padding: 10px 12px;
+                border-radius: 15px;
+                font-size: 14px;
+                line-height: 1.4;
+                opacity: 0;
+                transform: translateY(10px);
+                animation: fadeInSlideUp 0.5s ease-out forwards;
+            }
+
+            .ai-message {
+                align-self: flex-start;
+                background-color: var(--ai-bubble);
+            }
+
+            .user-message {
+                align-self: flex-end;
+                background-color: var(--user-bubble);
+            }
+
+            .ai-footer {
+                padding: 10px 15px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                display: flex;
+            }
+
+            .ai-footer input {
+                flex-grow: 1;
+                padding: 10px;
+                border-radius: 8px;
+                border: none;
+                background-color: var(--card-bg);
+                color: var(--white-text);
+                margin-right: 10px;
+                font-size: 14px;
+            }
+
+            .ai-footer button {
+                background-color: var(--primary-blue);
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 8px;
+                cursor: pointer;
+            }
+
+            .ai-greeting h3 {
+                font-size: 18px;
+                margin: 0 0 5px 0;
+            }
+
+            .ai-greeting p,
+            .ai-contact-info p {
+                margin: 0 0 5px;
+            }
+
+            .ai-contact-info i {
+                color: var(--important-yellow);
+                width: 15px;
+            }
+
+            .ai-contact-info a {
+                color: var(--important-yellow);
+                text-decoration: none;
+            }
+
+            .ai-quick-questions p {
+                font-weight: 600;
+                margin-top: 15px;
+            }
+
+            .ai-quick-questions button {
+                width: 100%;
+                padding: 10px;
+                margin-bottom: 10px;
+                border: none;
+                background-color: var(--ai-bubble);
+                color: var(--white-text);
+                text-align: left;
+                border-radius: 8px;
+                cursor: pointer;
+            }
+
+            /* Notification Styles */
+            #custom-notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: var(--card-bg);
+                color: var(--white-text);
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                z-index: 2000;
+                transform: translateX(120%);
+                transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            }
+
+            #custom-notification.active {
+                transform: translateX(0);
+            }
+
+            #custom-notification i {
+                font-size: 24px;
+                margin-right: 15px;
+            }
+
+            #custom-notification.success i {
+                color: var(--success-green);
+            }
+
+            #custom-notification.info i {
+                color: var(--info-blue);
+            }
+
+            #custom-notification.error i {
+                color: var(--error-red);
+            }
+
+            /* Animations */
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+
+                to {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                }
+
+                to {
+                    opacity: 0;
+                }
+            }
+
+            @keyframes scaleIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.9);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+
+            @keyframes scaleOut {
+                from {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+
+                to {
+                    opacity: 0;
+                    transform: scale(0.9);
+                }
+            }
+
+            @keyframes slideInLeft {
+                from {
+                    transform: translateX(-100%);
+                }
+
+                to {
+                    transform: translateX(0);
+                }
+            }
+
+            @keyframes focusIn {
+                from {
+                    opacity: 0;
+                    filter: blur(5px);
+                    transform: scale(1.05);
+                }
+
+                to {
+                    opacity: 1;
+                    filter: blur(0);
+                    transform: scale(1);
+                }
+            }
+
+            @keyframes fadeInSlideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .sidebar {
+                animation: slideInLeft 0.5s ease-out forwards;
+            }
+
+            .page-header {
+                opacity: 0;
+                animation: focusIn 0.7s ease-out 0.2s forwards;
+            }
+
+            .profile-card {
+                opacity: 0;
+                animation: focusIn 0.7s ease-out 0.4s forwards;
+            }
+
+            .modal.show {
+                animation: fadeIn 0.3s ease;
+            }
+
+            .modal.show .modal-content {
+                animation: scaleIn 0.3s ease-out;
+            }
+
+            .modal.fade-out {
+                animation: fadeOut 0.3s ease forwards;
+            }
+
+            .modal.fade-out .modal-content {
+                animation: scaleOut 0.3s ease-in forwards;
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <div class="tech-background">
+            <div class="grid-lines"></div>
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+            </div>
+            <div class="particles" id="particles"></div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="{{ url_for('static', filename='images/cubacub_logo_white.png') }}" alt="Logo">
+                </div>
+                <div class="barangay-title">
+                    <div class="barangay-name" style="color: white; font-family: 'Orbitron', sans-serif;">Barangay Cubacub
+                    </div>
+                    <div class="portal-name"
+                        style="font-size: 11px; color: var(--muted-text); font-family: 'Exo 2', sans-serif;">Digital Portal
+                    </div>
+                </div>
+            </div>
+
+            <div class="navigation-title">Navigation</div>
+            <ul class="menu">
+                <li class="active"><a href="{{ url_for('dashboard') }}"><i class="fa-solid fa-table-columns"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('profile') }}"><i class="fa-solid fa-user"></i> My Profile</a></li>
+                <li><a href="{{ url_for('certificates') }}"><i class="fa-solid fa-file-lines"></i> Certificate Requests</a></li>
+                <li><a href="{{ url_for('concerns') }}"><i class="fa-solid fa-comment-dots"></i> Concerns & Suggestions</a></li>
+                <li><a href="{{ url_for('appointments') }}"><i class="fa-solid fa-calendar-check"></i> Appointments</a></li>
+                <li><a href="{{ url_for('emergency') }}"><i class="fa-solid fa-clock"></i> Emergency Report</a></li>
+                <li><a href="{{ url_for('announcements') }}"><i class="fa-solid fa-bell"></i> Announcements</a></li>
+            </ul>
+
+            <div class="profile-logout-section">
+                <div class="user-profile">
+                    <div class="user-avatar" id="userAvatar">?</div>
+                    <div class="user-info">
+                        <div class="name" id="userName">Loading...</div>
+                        <div class="email" id="userEmail">loading@email.com</div>
+                    </div>
+                </div>
+                <a href="#" class="logout-btn" onclick="logoutUser()">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1 style="font-family: 'Orbitron', sans-serif;">Certificate Requests</h1>
+                    <p style="font-family: 'Exo 2', sans-serif;">Request and track official barangay documents</p>
+                </div>
+                <div id="live-datetime"></div>
+            </div>
+
+            <div class="profile-card" style="text-align: center; padding: 50px 30px; background: rgba(34, 40, 65, 0.8);">
+                <i class="fa-regular fa-file-alt"
+                    style="font-size: 80px; color: var(--light-text); opacity: 0.3; margin-bottom: 20px;"></i>
+                <h2 style="color: var(--white-text); font-family: 'Orbitron', sans-serif;">No Certificate Requests Yet</h2>
+                <p style="color: var(--light-text); margin-bottom: 25px; font-family: 'Exo 2', sans-serif;">
+                    Start by requesting your first certificate
+                </p>
+                <button class="btn-primary" onclick="toggleModal('certificateModal')">
+                    <i class="fa-solid fa-plus"></i> Request Certificate
+                </button>
+            </div>
+        </div>
+
+        <div id="certificateModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Request New Certificate</h2>
+                    <span class="close-btn" onclick="toggleModal('certificateModal')">&times;</span>
+                </div>
+                <form id="certificateRequestForm">
+                    <div class="modal-body">
+                        <div class="info-field">
+                            <label for="certType">Certificate Type *</label>
+                            <select id="certType" required>
+                                <option value="">Select certificate type</option>
+                                <option value="Barangay Clearance">Barangay Clearance</option>
+                                <option value="Residency">Certificate of Residency</option>
+                                <option value="Indigency">Indigency Certificate</option>
+                            </select>
+                        </div>
+                        <div class="info-field">
+                            <label for="certPurpose">Purpose *</label>
+                            <input type="text" id="certPurpose" required
+                                placeholder="e.g., Employment requirement, Business permit, etc.">
+                        </div>
+                        <div class="info-field">
+                            <label for="certNotes">Additional Notes</label>
+                            <textarea id="certNotes" rows="3"
+                                placeholder="Any additional information or special requests"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary"
+                            onclick="toggleModal('certificateModal')">Cancel</button>
+                        <button type="submit" class="btn-primary">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script src="background.js"></script>
+
+        <div id="paymentModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Choose Payment Method</h2>
+                    <span class="close-btn" onclick="toggleModal('paymentModal')">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="payment-choices" class="payment-choices">
+                        <div class="payment-option" onclick="selectPayment('face-to-face')">
+                            <i class="fa-solid fa-user-friends"></i>
+                            <h3>Face to Face Payment</h3>
+                        </div>
+                        <div class="payment-option" onclick="selectPayment('online')">
+                            <i class="fa-solid fa-credit-card"></i>
+                            <h3>Online Payment</h3>
+                        </div>
+                    </div>
+                    <div id="online-payment-view" style="display: none; text-align: left;">
+                        <div class="info-field">
+                            <label for="gcashName">GCash Name *</label>
+                            <input type="text" id="gcashName" required placeholder="Your full name on GCash">
+                        </div>
+                        <div class="info-field">
+                            <label for="gcashNumber">GCash Number *</label>
+                            <input type="text" id="gcashNumber" required placeholder="e.g., 09123456789" maxlength="11"
+                                inputmode="numeric">
+                        </div>
+                        <div style="text-align: center;">
+                            <img src="gcashtest.png" alt="GCash QR Code"
+                                style="max-width: 250px; border-radius: 8px; margin-bottom: 10px;">
+                            <p class="note">By clicking 'Submit', you confirm that you have already sent the payment.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary"
+                                onclick="toggleModal('paymentModal')">Cancel</button>
+                            <button type="button" class="btn-primary" onclick="submitOnlinePayment()">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-button" onclick="toggleModal('aiAssistantModal')">
+            <i class="fa-solid fa-comment-dots"></i>
+        </div>
+        <div id="aiAssistantModal" class="ai-assistant-modal">
+            <div class="ai-header">
+                <div><i class="fa-solid fa-robot"></i> Chatbot Assistant <span>Scripted Q&A</span></div>
+                <span class="ai-close-btn" onclick="toggleModal('aiAssistantModal')">&times;</span>
+            </div>
+            <div class="ai-body" id="chatHistoryContainerWrapper">
+                <div id="aiInitialContent">
+                    <div class="ai-greeting">
+                        <h3>Hello! I'm your Barangay Cubacub Chatbot.</h3>
+                        <p>I can help you navigate the portal and answer common questions.</p>
+                    <div class="ai-contact-section" style="margin-bottom: 25px;">
+                    <span class="contact-label">Need to talk to an official?</span>
+                    <p class="contact-item"><i class="fa-solid fa-phone" style="color:var(--yellow-accent)"></i> Barangay Hotline: <span style="color:var(--muted-text)">(032) 123-4567</span></p>
+                    <p class="contact-item"><i class="fa-solid fa-envelope" style="color:var(--yellow-accent)"></i> Email: <span style="color:var(--yellow-accent)">official.cubacub@gov.ph</span></p>
+                </div>
+
+                <div class="ai-quick-questions">
+                    <span class="quick-label">Quick Questions to ask:</span>
+                    <button onclick="simulateQuery('How do I request a barangay clearance?')">How do I request a barangay clearance?</button>
+                    <button onclick="simulateQuery('How can I submit a concern?')">How can I submit a concern?</button>
+                    <button onclick="simulateQuery('How do I schedule an appointment?')">How do I schedule an appointment?</button>
+                </div>
+            </div>
+            <div id="chatMessagesContainer"></div>
+        </div>
+        <div class="ai-footer">
+            <input type="text" id="aiInput" placeholder="Type your question..." onkeypress="if(event.keyCode==13) handleAISubmit()">
+            <button onclick="handleAISubmit()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        // --- CHATBOT LOGIC ---
+        let chatHistory = []; 
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const isVisible = modal.classList.contains('show');
+            modal.classList.toggle('show', !isVisible);
+            const chatIcon = document.querySelector('#chatButton i');
+            if (!isVisible) {
+                chatIcon.classList.replace('fa-comment-dots', 'fa-xmark');
+                renderChatHistory();
+            } else {
+                chatIcon.classList.replace('fa-xmark', 'fa-comment-dots');
+            }
+        }
+
+        function renderChatHistory() {
+            const container = document.getElementById('chatMessagesContainer');
+            const greeting = document.getElementById('aiInitialContent');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (chatHistory.length > 0) {
+                greeting.style.display = 'none';
+                chatHistory.forEach(msg => {
+                    const div = document.createElement('div');
+                    div.className = `chat-message ${msg.type}-message`;
+                    div.innerText = msg.message; // Use innerText to maintain formatting
+                    container.appendChild(div);
+                });
+            } else {
+                greeting.style.display = 'block';
+            }
+            // Auto-scroll
+            const bodyWrapper = document.getElementById('chatHistoryContainerWrapper');
+            bodyWrapper.scrollTop = bodyWrapper.scrollHeight;
+        }
+
+        async function handleAISubmit() {
+            const inputField = document.getElementById('aiInput');
+            const query = inputField.value.trim();
+            if (query === "") return;
+
+            chatHistory.push({ message: query, type: 'user' });
+            renderChatHistory();
+            inputField.value = '';
+
+            // ADD TYPING ANIMATION
+            const container = document.getElementById('chatMessagesContainer');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chat-message ai-message typing';
+            typingDiv.id = 'ai-typing';
+            typingDiv.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+            container.appendChild(typingDiv);
+            
+            const bodyWrapper = document.getElementById('chatHistoryContainerWrapper');
+            bodyWrapper.scrollTop = bodyWrapper.scrollHeight;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: query })
+                });
+                const data = await response.json();
+                
+                // Remove typing and show real response
+                const loader = document.getElementById('ai-typing');
+                if(loader) loader.remove();
+                
+                chatHistory.push({ message: data.response, type: 'ai' });
+                renderChatHistory();
+            } catch (error) {
+                const loader = document.getElementById('ai-typing');
+                if(loader) loader.innerText = "Error connecting to AI.";
+            }
+        }
+
+        function simulateQuery(query) {
+            document.getElementById('aiInput').value = query;
+            handleAISubmit();
+        }
+
+        // --- BACKGROUND & DATA ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainContent = document.getElementById('mainContent');
+            setTimeout(() => mainContent.classList.add('loaded'), 100);
+
+            // Live Time
+            const dateTimeElement = document.getElementById('live-datetime');
+            setInterval(() => {
+                const now = new Date();
+                dateTimeElement.innerHTML = `${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}<br><strong>${now.toLocaleTimeString()}</strong>`;
+            }, 1000);
+
+            // Particles
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 60; i++) {
+                const p = document.createElement('div');
+                p.classList.add('particle');
+                p.style.width = p.style.height = `${Math.random() * 3 + 1}px`;
+                p.style.left = `${Math.random() * 100}vw`;
+                p.style.top = `${Math.random() * 100}vh`;
+                p.style.setProperty('--target-x', `${(Math.random() - 0.5) * 40}vw`);
+                p.style.setProperty('--target-y', `${(Math.random() - 0.5) * 40}vh`);
+                particlesContainer.appendChild(p);
+            }
+        });
+
+        function logoutUser() {
+            localStorage.clear();
+            window.location.href = "{{ url_for('index') }}";
+        }
+    </script>
+</body>
+</html>

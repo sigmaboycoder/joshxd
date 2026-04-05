@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Cubacub - Concerns & Suggestions</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/background.css') }}">
+    <script src="{{ url_for('static', filename='js/background.js') }}"></script>   
+
+    <style>
+        :root {
+            --dark-blue: #1c2136; --main-background: #171b2d; --sidebar-bg: #222841;
+            --primary-blue: #555ac8; --light-text: #a8aabe; --white-text: #ffffff;
+            --card-bg: #222841; --lighter-bg: #2a304e;
+            --ai-bg: #2d324d; --ai-bubble: #373e5a; --user-bubble: #555ac8;
+            --important-yellow: #ffc107;
+            --success-green: #28a745; 
+            --yellow-accent: #ffc107;
+            --muted-text: #717694;
+            --tech-blue: #00d9ff;
+            --tech-purple: #a855f7;
+        }
+        body {
+            margin: 0;
+            font-family: 'Exo 2', sans-serif;
+            color: var(--light-text);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ADDED: MAP CONTAINER STYLE */
+        #map {
+            height: 200px;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid var(--primary-blue);
+            z-index: 1;
+        }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            width: 270px;
+            background: rgba(20, 24, 35, 0.9);
+            backdrop-filter: blur(10px);
+            box-shadow: 6px 0 30px rgba(0, 0, 0, 0.6);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 2;
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 25px rgba(59,130,246,0.3);
+            background: rgba(255,255,255,0.05);
+        }
+        .sidebar-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .barangay-title .barangay-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--light-text);
+        }
+        .barangay-title .portal-name {
+            font-size: 11px;
+            color: var(--muted-text);
+        }
+        .navigation-title {
+            padding: 10px 20px 5px;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--muted-text);
+            font-weight: 600;
+        }
+        .menu {
+            list-style: none;
+            margin: 0;
+            padding: 0 10px;
+            flex: 1;
+        }
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--muted-text);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .menu li.active a {
+            background: linear-gradient(135deg, rgba(0,217,255,0.2), rgba(168,85,247,0.2));
+            color: var(--light-text);
+        }
+        .menu li a:hover {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+        }
+        .profile-logout-section {
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.02);
+        }
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        .user-info .name { font-weight: 700; font-size: 13px; }
+        .user-info .email { font-size: 12px; color: var(--muted-text); }
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: #ff6b6b;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.3s;
+        }
+        .logout-btn:hover {
+            background: linear-gradient(90deg, rgba(0,217,255,0.1), rgba(168,85,247,0.1));
+            transform: translateY(-2px);
+        }
+
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; opacity: 0; transform: translateY(10px); }
+        .page-header h1 {font-size: 32px; font-weight: 700;color: var(--white-text);font-family: 'Orbitron', sans-serif;line-height: 1.2;}
+        .page-header p { font-size: 14px; color: var(--light-text); margin: 5px 0 0; }
+        #live-datetime { font-size: 14px; font-weight: 600; color: var(--light-text); background-color: var(--card-bg); padding: 8px 15px; border-radius: 8px; text-align: right; }
+        .btn-primary { background-color: var(--primary-blue); color: white; padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, transform 0.2s; }
+        .btn-primary:hover { background-color: #4a4fa8; transform: translateY(-1px); }
+        .profile-card {background: rgba(34, 40, 65, 0.8); padding: 50px 30px;border-radius: 12px;font-family: 'Exo 2', sans-serif; text-align: center;}
+        .info-field { margin-bottom: 15px; }
+        .info-field label { display: block; font-size: 12px; color: var(--light-text); margin-bottom: 5px; }
+        .info-field input, .info-field textarea, .info-field select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--dark-blue); background: var(--main-background); color: var(--white-text); font-size: 14px; box-sizing: border-box; transition: border-color 0.3s; }
+        .info-field input:focus, .info-field textarea:focus, .info-field select:focus { border-color: var(--primary-blue); outline: none; }
+        .modal-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.6); opacity: 0; transition: opacity 0.3s ease-out; }
+        .modal.show { display: block; opacity: 1; }
+        .modal-content { background-color: var(--card-bg); margin: 10% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 600px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); transform: translateY(-50px); transition: transform 0.3s ease-out; }
+        .modal.show .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .modal-header h2 { margin: 0; font-size: 20px; }
+        .close-btn { color: var(--light-text); font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.2s, transform 0.2s; }
+        .close-btn:hover, .close-btn:focus { color: var(--white-text); text-decoration: none; transform: rotate(90deg); }
+        .modal-footer { padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-secondary { background-color: transparent; color: var(--light-text); padding: 10px 20px; border: 1px solid var(--light-text); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-secondary:hover { background-color: var(--lighter-bg); color: var(--white-text); border-color: var(--white-text); }
+        
+        /* Chatbot Styles */
+        .chat-button { position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; background-color: var(--primary-blue); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; z-index: 90; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .chat-button:hover { transform: scale(1.1) rotate(5deg); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5); }
+        .ai-assistant-modal { display: none; position: fixed; bottom: 90px; right: 30px; width: 350px; height: 500px; background-color: var(--ai-bg); border-radius: 12px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); flex-direction: column; z-index: 100; }
+        .ai-assistant-modal.show { display: flex; }
+
+        .ai-header { padding: 15px; background-color: var(--lighter-bg); border-top-left-radius: 12px; border-top-right-radius: 12px; color: var(--primary-blue); font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .ai-header span { font-size: 12px; color: var(--light-text); font-weight: 400; }
+        .ai-header i { margin-right: 5px; }
+        .ai-close-btn { cursor: pointer; font-size: 18px; color: var(--light-text); }
+        .ai-body { padding: 15px; flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        #chatMessagesContainer { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .chat-message { max-width: 85%; padding: 10px 12px; border-radius: 15px; font-size: 14px; line-height: 1.4; flex-shrink: 0; opacity: 0; transform: translateY(10px); animation: fadeInSlideUp 0.5s ease-out forwards; }
+        .ai-message { align-self: flex-start; background-color: var(--ai-bubble); border-bottom-left-radius: 2px; }
+        .user-message { align-self: flex-end; background-color: var(--user-bubble); border-bottom-right-radius: 2px; }
+        
+        /* Typing Dots Animation */
+        .typing { display: flex; gap: 5px; padding: 12px 16px !important; }
+        .dot { width: 6px; height: 6px; background: var(--light-text); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        .ai-footer { padding: 10px 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; }
+        .ai-footer input { flex-grow: 1; padding: 10px; border-radius: 8px; border: none; background-color: var(--card-bg); color: var(--white-text); margin-right: 10px; font-size: 14px; }
+        .ai-footer button { background-color: var(--primary-blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; }
+        .ai-greeting h3 { font-size: 18px; margin: 0 0 5px 0; font-weight: 600; color: white; }
+        .ai-greeting p { font-size: 14px; color: var(--light-text); margin-bottom: 10px; }
+        .ai-contact-info { font-size: 12px; color: var(--light-text); margin-bottom: 15px; line-height: 1.6; }
+        .ai-contact-info i { color: var(--important-yellow); width: 15px; }
+        .ai-contact-info a { color: var(--important-yellow); text-decoration: none; }
+        .ai-quick-questions p { font-size: 13px; font-weight: 600; color: var(--white-text); margin-top: 15px; margin-bottom: 5px; }
+        .ai-quick-questions button { display: block; width: 100%; padding: 10px; margin-bottom: 10px; border: none; background-color: var(--ai-bubble); color: var(--white-text); text-align: left; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; font-size: 14px; }
+        
+        #custom-notification { position: fixed; top: 20px; right: 20px; background-color: var(--card-bg); color: var(--white-text); padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; align-items: center; z-index: 2000; transform: translateX(120%); transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        #custom-notification.active { transform: translateX(0); }
+        #custom-notification i { color: var(--success-green); font-size: 24px; margin-right: 15px; }
+        
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInSlideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .sidebar { animation: slideInLeft 0.5s ease-out forwards; }
+        .page-header { animation: fadeInSlideUp 0.6s ease-out 0.2s forwards; }
+        .profile-card { animation: fadeInSlideUp 0.6s ease-out 0.4s forwards; }
+    </style>
+</head>
+<body>
+
+    <div class="tech-background">
+        <div class="grid-lines"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+        </div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="{{ url_for('static', filename='cubacub_logo_white.png') }}" alt="Barangay Cubacub Logo">
+            </div>
+            <div class="barangay-title">
+                <div class="barangay-name" style="color: white; font-family: 'Orbitron', sans-serif;">Barangay Cubacub</div>
+                <div class="portal-name" style="font-size: 11px; color: var(--muted-text); font-family: 'Exo 2', sans-serif;">Digital Portal</div>
+            </div>
+        </div>
+
+        <div class="navigation-title">NAVIGATION</div>
+        <ul class="menu">
+            <li><a href="{{ url_for('dashboard') }}"><i class="fa-solid fa-table-columns"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('profile') }}"><i class="fa-solid fa-user"></i> My Profile</a></li>
+            <li><a href="{{ url_for('certificates') }}"><i class="fa-solid fa-file-lines"></i> Certificate Requests</a></li>
+            <li class="active"><a href="{{ url_for('concerns') }}"><i class="fa-solid fa-comment-dots"></i> Concerns & Suggestions</a></li>
+            <li><a href="{{ url_for('appointments') }}"><i class="fa-solid fa-calendar-check"></i> Appointments</a></li>
+            <li><a href="{{ url_for('emergency') }}"><i class="fa-solid fa-clock"></i> Emergency Report</a></li>
+            <li><a href="{{ url_for('announcements') }}"><i class="fa-solid fa-bell"></i> Announcements</a></li>
+        </ul>
+
+        <div class="profile-logout-section">
+            <div class="user-profile">
+                <div class="user-avatar" id="userAvatar">?</div>
+                <div class="user-info">
+                    <div class="name" id="userName">Loading...</div>
+                    <div class="email" id="userEmail">loading@email.com</div>
+                </div>
+            </div>
+            <a href="#" class="logout-btn" onclick="logoutUser()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1>Concerns & Suggestions</h1>
+                <p>Submit and track community concerns</p>
+            </div>
+            <div id="live-datetime"></div>
+        </div>
+        <div class="profile-card" id="noConcernsPlaceholder" style="text-align: center; padding: 80px 30px;">
+            <i class="fa-regular fa-comment-alt" style="font-size: 80px; color: var(--light-text); opacity: 0.3; margin-bottom: 20px;"></i>
+            <h2>No Concerns Submitted Yet</h2>
+            <p style="color: var(--light-text); margin-bottom: 25px;">Share your concerns or suggestions with the barangay</p>
+            <button class="btn-primary" onclick="toggleModal('concernModal')">
+                <i class="fa-solid fa-plus"></i> Submit Concern
+            </button>
+        </div>
+    </div>
+    
+    <div id="concernModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Submit New Concern or Suggestion</h2>
+                <span class="close-btn" onclick="toggleModal('concernModal')">&times;</span>
+            </div>
+            <form id="concernSubmissionForm">
+                <div class="modal-body">
+                    <div class="info-field">
+                        <label for="concernTitle">Title *</label>
+                        <input type="text" id="concernTitle" required placeholder="Brief description of your concern">
+                    </div>
+                    <div class="modal-grid-2">
+                        <div class="info-field">
+                            <label for="concernCategory">Category *</label>
+                            <select id="concernCategory" required>
+                                <option value="">Select category</option>
+                                <option value="Peace and Order">Peace and Order</option>
+                                <option value="Sanitation">Sanitation</option>
+                                <option value="Infrastructure">Infrastructure</option>
+                                <option value="Suggestion">Suggestion</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="info-field">
+                            <label for="concernPriority">Priority</label>
+                            <select id="concernPriority">
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                                <option value="High">High</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="info-field">
+                        <label>Select Location (Click map or drag pin) *</label>
+                        <div id="map"></div>
+                        <input type="text" id="concernLocation" placeholder="Coordinates will appear here" readonly required>
+                    </div>
+
+                    <div class="info-field">
+                        <label for="concernDescription">Description *</label>
+                        <textarea id="concernDescription" rows="4" required placeholder="Provide detailed information about your concern or suggestion"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="toggleModal('concernModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Submit Concern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="chat-button" id="chatBtn" onclick="toggleModal('aiAssistantModal')">
+        <i class="fa-solid fa-comment-dots"></i>
+    </div>
+    <div id="aiAssistantModal" class="ai-assistant-modal">
+        <div class="ai-header">
+            <div><i class="fa-solid fa-robot"></i> Chatbot Assistant <span>Powered by BantAI</span></div>
+            <span class="ai-close-btn" onclick="toggleModal('aiAssistantModal')">&times;</span>
+        </div>
+        <div class="ai-body" id="chatHistoryContainerWrapper">
+            <div id="aiInitialContent"> 
+                <div class="ai-greeting">
+                    <h3>Hello! I'm your Barangay Cubacub Chatbot.</h3>
+                    <p>I can help you navigate the portal and answer common questions.</p>
+                </div>
+                <div class="ai-contact-section" style="margin-bottom: 25px;">
+                    <span class="contact-label">Need to talk to an official?</span>
+                    <p class="contact-item"><i class="fa-solid fa-phone" style="color:var(--yellow-accent)"></i> Barangay Hotline: <span style="color:white">(032) 123-4567</span></p>
+                    <p class="contact-item"><i class="fa-solid fa-envelope" style="color:var(--yellow-accent)"></i> Email: <span style="color:var(--yellow-accent)">official.cubacub@gov.ph</span></p>
+                </div>
+
+                <div class="ai-quick-questions">
+                    <p style="color:white;">Quick Questions to ask:</p>
+                    <button onclick="simulateQuery('How do I request a barangay clearance?')">How do I request a barangay clearance?</button>
+                    <button onclick="simulateQuery('How can I submit a concern?')">How can I submit a concern?</button>
+                    <button onclick="simulateQuery('How do I schedule an appointment?')">How do I schedule an appointment?</button>
+                </div>
+            </div>
+            <div id="chatMessagesContainer"></div>
+        </div>
+        <div class="ai-footer">
+            <input type="text" id="aiInput" placeholder="Type your question..." onkeypress="if(event.keyCode==13) handleAISubmit()">
+            <button onclick="handleAISubmit()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // ADDED: GLOBAL MAP VARIABLES
+        let map;
+        let marker;
+
+        function initConcernMap() {
+            if (map) return; // Only init once
+            
+            // Cubacub default coords
+            const defaultCoords = [10.3705, 123.9374];
+            
+            map = L.map('map').setView(defaultCoords, 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            marker = L.marker(defaultCoords, { draggable: true }).addTo(map);
+
+            // Update input on drag
+            marker.on('dragend', function() {
+                const pos = marker.getLatLng();
+                document.getElementById('concernLocation').value = `Lat: ${pos.lat.toFixed(5)}, Lng: ${pos.lng.toFixed(5)}`;
+            });
+
+            // Update input on click
+            map.on('click', function(e) {
+                marker.setLatLng(e.latlng);
+                document.getElementById('concernLocation').value = `Lat: ${e.latlng.lat.toFixed(5)}, Lng: ${e.latlng.lng.toFixed(5)}`;
+            });
+        }
+
+        let chatHistory = []; 
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const isVisible = modal.classList.contains('show');
+            modal.classList.toggle('show', !isVisible);
+            
+            // Fix for Map inside Modal
+            if (modalId === 'concernModal' && !isVisible) {
+                setTimeout(() => {
+                    initConcernMap();
+                    map.invalidateSize();
+                }, 300);
+            }
+
+            const chatIcon = document.querySelector('#chatBtn i');
+            if (chatIcon && modalId === 'aiAssistantModal') {
+                if (!isVisible) {
+                    chatIcon.classList.replace('fa-comment-dots', 'fa-xmark');
+                    renderChatHistory();
+                } else {
+                    chatIcon.classList.replace('fa-xmark', 'fa-comment-dots');
+                }
+            }
+        }
+
+        function renderChatHistory() {
+            const container = document.getElementById('chatMessagesContainer');
+            const greeting = document.getElementById('aiInitialContent');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (chatHistory.length > 0) {
+                greeting.style.display = 'none';
+                chatHistory.forEach(msg => {
+                    const div = document.createElement('div');
+                    div.className = `chat-message ${msg.type}-message`;
+                    div.innerText = msg.message; 
+                    container.appendChild(div);
+                });
+            } else {
+                greeting.style.display = 'block';
+            }
+            const bodyWrapper = document.getElementById('chatHistoryContainerWrapper');
+            bodyWrapper.scrollTop = bodyWrapper.scrollHeight;
+        }
+
+        async function handleAISubmit() {
+            const inputField = document.getElementById('aiInput');
+            const query = inputField.value.trim();
+            if (query === "") return;
+
+            chatHistory.push({ message: query, type: 'user' });
+            renderChatHistory();
+            inputField.value = '';
+
+            const container = document.getElementById('chatMessagesContainer');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chat-message ai-message typing';
+            typingDiv.id = 'ai-typing';
+            typingDiv.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+            container.appendChild(typingDiv);
+            
+            const bodyWrapper = document.getElementById('chatHistoryContainerWrapper');
+            bodyWrapper.scrollTop = bodyWrapper.scrollHeight;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: query })
+                });
+                const data = await response.json();
+                
+                const loader = document.getElementById('ai-typing');
+                if(loader) loader.remove();
+                
+                chatHistory.push({ message: data.response, type: 'ai' });
+                renderChatHistory();
+            } catch (error) {
+                const loader = document.getElementById('ai-typing');
+                if(loader) loader.innerText = "Error connecting to AI.";
+            }
+        }
+
+        function simulateQuery(query) {
+            document.getElementById('aiInput').value = query;
+            handleAISubmit();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateTimeElement = document.getElementById('live-datetime');
+            setInterval(() => {
+                const now = new Date();
+                dateTimeElement.innerHTML = `${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}<br><strong>${now.toLocaleTimeString()}</strong>`;
+            }, 1000);
+
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 60; i++) {
+                const p = document.createElement('div');
+                p.classList.add('particle');
+                p.style.width = p.style.height = `${Math.random() * 3 + 1}px`;
+                p.style.left = `${Math.random() * 100}vw`;
+                p.style.top = `${Math.random() * 100}vh`;
+                p.style.setProperty('--target-x', `${(Math.random() - 0.5) * 40}vw`);
+                p.style.setProperty('--target-y', `${(Math.random() - 0.5) * 40}vh`);
+                if(particlesContainer) particlesContainer.appendChild(p);
+            }
+
+            // --- LOCAL STORAGE & PERSISTENCE LOGIC START ---
+            
+            function renderConcernCard(data) {
+                const mainContent = document.querySelector('.main-content');
+                
+                const placeholder = document.getElementById('noConcernsPlaceholder');
+                if(placeholder) placeholder.style.display = 'none';
+
+                const newCard = document.createElement('div');
+                newCard.className = 'profile-card';
+                newCard.style.textAlign = 'left'; 
+                newCard.style.marginTop = '20px';
+                newCard.style.padding = '25px';
+                newCard.style.borderLeft = `4px solid ${data.priority === 'High' ? '#ff6b6b' : 'var(--primary-blue)'}`;
+                newCard.style.animation = 'fadeInSlideUp 0.6s ease-out forwards';
+
+                newCard.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+                        <div>
+                            <h3 style="margin:0 0 5px 0; color:var(--white-text); font-family:'Orbitron', sans-serif;">${data.title}</h3>
+                            <span style="font-size:12px; color:var(--muted-text);"><i class="fa-solid fa-map-marker-alt"></i> ${data.location || 'No location specified'}</span>
+                        </div>
+                        <span style="background:rgba(85, 90, 200, 0.2); color:var(--tech-blue); padding:5px 12px; border-radius:20px; font-size:11px; border:1px solid var(--primary-blue);">${data.category}</span>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:8px; margin-bottom:15px;">
+                        <p style="margin:0; color:var(--light-text); font-size:14px; line-height:1.5;">${data.description}</p>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--muted-text); border-top:1px solid rgba(255,255,255,0.05); padding-top:10px;">
+                        <span>Priority: <span style="color:${data.priority === 'High' ? '#ff6b6b' : 'var(--white-text)'}">${data.priority}</span></span>
+                        <span><i class="fa-regular fa-clock"></i> Submitted at ${data.time}</span>
+                    </div>
+                `;
+                mainContent.appendChild(newCard);
+            }
+
+            const savedConcerns = JSON.parse(localStorage.getItem('cubacubConcerns') || '[]');
+            if (savedConcerns.length > 0) {
+                savedConcerns.forEach(concern => renderConcernCard(concern));
+            }
+
+            const concernForm = document.getElementById('concernSubmissionForm');
+            if (concernForm) {
+                concernForm.addEventListener('submit', function(e) {
+                    e.preventDefault(); 
+
+                    const now = new Date();
+                    const concernData = {
+                        title: document.getElementById('concernTitle').value,
+                        category: document.getElementById('concernCategory').value,
+                        priority: document.getElementById('concernPriority').value,
+                        location: document.getElementById('concernLocation').value,
+                        description: document.getElementById('concernDescription').value,
+                        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        date: now.toLocaleDateString()
+                    };
+
+                    const existingData = JSON.parse(localStorage.getItem('cubacubConcerns') || '[]');
+                    existingData.push(concernData);
+                    localStorage.setItem('cubacubConcerns', JSON.stringify(existingData));
+
+                    renderConcernCard(concernData);
+                    concernForm.reset();
+                    toggleModal('concernModal');
+                });
+            }
+        });
+
+        function logoutUser() {
+            localStorage.clear();
+            window.location.href = "{{ url_for('index') }}";
+        }
+    </script>
+</body>
+</html>

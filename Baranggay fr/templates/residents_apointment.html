@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Cubacub - Appointments</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/background.css') }}">
+    <script src="{{ url_for('static', filename='js/background.js') }}"></script>
+
+    <style>
+    /* === ROOT COLORS === */
+    :root {
+        --tech-blue: #00d9ff; 
+        --tech-purple: #a855f7;
+        --dark-blue: #1c2136;
+        --main-background: #171b2d;
+        --sidebar-bg: #222841;
+        --primary-blue: #555ac8;
+        --light-text: #a8aabe;
+        --muted-text: #94a3b8; 
+        --white-text: #ffffff;
+        --card-bg: #222841;
+        --lighter-bg: #2a304e;
+        --ai-bg: #2d324d; 
+        --ai-bubble: #373e5a; 
+        --user-bubble: #555ac8;
+        --important-yellow: #ffc107;
+        --success-green: #28a745;
+    }
+    
+    /* === BODY (FIXED LAYOUT) === */
+    body {
+        margin: 0;
+        font-family: 'Exo 2', sans-serif;
+        color: var(--light-text);
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        height: 100vh;
+        display: flex; 
+        overflow: hidden;
+        position: relative;
+    }
+    
+    /* === SIDEBAR (FIXED) === */
+    .sidebar {
+        width: 270px;
+        background: rgba(20, 24, 35, 0.9);
+        backdrop-filter: blur(10px);
+        box-shadow: 6px 0 30px rgba(0, 0, 0, 0.6);
+        border-right: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        flex-direction: column;
+        z-index: 2;
+        height: 100%;
+        position: fixed; 
+        top: 0; 
+        left: 0;
+        overflow-y: hidden;
+    }
+    
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-logo {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 0 25px rgba(59,130,246,0.3);
+        background: rgba(255,255,255,0.05);
+    }
+    .sidebar-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .barangay-title .barangay-name {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--white-text); 
+    }
+    .barangay-title .portal-name {
+        font-size: 11px;
+        color: var(--muted-text);
+    }
+    .menu {
+        list-style: none;
+        margin: 0;
+        padding: 0 10px;
+        flex: 1;
+        margin-top: 10px;
+    }
+    .menu li a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        color: var(--muted-text);
+        text-decoration: none;
+        transition: 0.3s;
+    }
+    .menu li.active a {
+        background: linear-gradient(135deg, rgba(0,217,255,0.2), rgba(168,85,247,0.2));
+        color: var(--white-text); 
+    }
+    .menu li a:hover {
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+    }
+    .profile-logout-section {
+        padding: 15px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        background: rgba(255,255,255,0.02);
+    }
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .user-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+    }
+    .user-info .name { font-weight: 700; font-size: 13px; color: white; }
+    .user-info .email { font-size: 12px; color: var(--muted-text); }
+    .logout-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        color: #ff6b6b;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        padding: 10px;
+        border: 1px solid rgba(255,255,255,0.05);
+        transition: 0.3s;
+    }
+
+    /* === MAIN CONTENT === */
+    .main-content { 
+        width: calc(100% - 270px);
+        margin-left: 270px; 
+        flex: 1; 
+        padding: 20px; 
+        overflow-y: auto; 
+        position: relative; 
+        z-index: 1; 
+        height: 100vh;
+        box-sizing: border-box;
+    }
+    
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-header h1 {font-size: 32px; font-weight: 700;color: var(--white-text);font-family: 'Orbitron', sans-serif;line-height: 1.2;}
+    
+    .btn-primary { 
+        background-color: var(--primary-blue); color: white; padding: 10px 20px; border: none; 
+        border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; 
+    }
+    
+    .profile-card {background: rgba(34, 40, 65, 0.8); padding: 50px 30px; border-radius: 12px; font-family: 'Exo 2', sans-serif; text-align: center;}
+    
+    #live-datetime { 
+        font-size: 14px; font-weight: 600; color: var(--light-text); background-color: var(--card-bg); 
+        padding: 8px 15px; border-radius: 8px; text-align: right; 
+    }
+
+    /* === NEW PENDING STYLES === */
+    #pendingState { 
+        display: none; /* Hidden by default */
+        text-align: left; 
+        border: 1px solid var(--tech-blue); 
+        box-shadow: 0 0 15px rgba(0, 217, 255, 0.1); 
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .status-badge { 
+        display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; 
+        text-transform: uppercase; background: rgba(255, 193, 7, 0.1); color: var(--important-yellow); 
+        border: 1px solid var(--important-yellow); margin-bottom: 20px; animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .detail-label { color: var(--muted-text); font-size: 14px; }
+    .detail-value { color: var(--white-text); font-weight: 600; }
+
+    /* === MODAL / FORM === */
+    .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); }
+    .modal-content { background-color: var(--card-bg); margin: 10% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 600px; border: 1px solid var(--tech-blue); }
+    .close-btn { color: var(--light-text); font-size: 28px; font-weight: bold; cursor: pointer; }
+    .info-field { margin-bottom: 15px; }
+    .info-field label { display: block; font-size: 12px; color: var(--light-text); margin-bottom: 5px; }
+    .info-field input, .info-field textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--dark-blue); background: var(--main-background); color: var(--white-text); box-sizing: border-box; }
+
+    /* === CHATBOT STYLES === */
+    .chat-button { position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; background-color: var(--primary-blue); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; z-index: 90; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+    .ai-assistant-modal { display: none; position: fixed; bottom: 90px; right: 30px; width: 350px; height: 500px; background-color: var(--ai-bg); border-radius: 12px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); flex-direction: column; z-index: 1000; }
+    .ai-header { padding: 15px; background-color: var(--lighter-bg); border-top-left-radius: 12px; border-top-right-radius: 12px; color: var(--primary-blue); font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+    .ai-body { padding: 15px; flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .chat-message { max-width: 85%; padding: 10px 12px; border-radius: 15px; font-size: 14px; line-height: 1.4; animation: fadeInSlideUp 0.5s ease-out forwards; }
+    .ai-message { align-self: flex-start; background-color: var(--ai-bubble); border-bottom-left-radius: 2px; }
+    .user-message { align-self: flex-end; background-color: var(--user-bubble); border-bottom-right-radius: 2px; }
+    .ai-footer { padding: 10px 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; }
+    .ai-footer input { flex-grow: 1; padding: 10px; border-radius: 8px; border: none; background-color: var(--card-bg); color: var(--white-text); margin-right: 10px; }
+    .ai-footer button { background-color: var(--primary-blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; }
+
+    /* === NOTIFICATION === */
+    #custom-notification { position: fixed; top: 20px; right: 20px; background-color: var(--card-bg); color: var(--white-text); padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; align-items: center; z-index: 2000; transform: translateX(120%); transition: 0.5s; }
+    #custom-notification.active { transform: translateX(0); }
+    #custom-notification i { color: var(--success-green); font-size: 24px; margin-right: 15px; }
+
+    @keyframes fadeInSlideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* /* NEW CODE START */
+    /* CUSTOM CONFIRMATION POP-UP (TASK 1) */
+    #customConfirmOverlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        z-index: 5000;
+        justify-content: center;
+        align-items: center;
+    }
+    .confirm-box {
+        background: var(--card-bg);
+        border: 1px solid var(--tech-blue);
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 0 30px rgba(0, 217, 255, 0.2);
+    }
+    .confirm-title { color: white; font-size: 1.5rem; margin-bottom: 15px; font-family: 'Orbitron'; }
+    .confirm-btns { display: flex; gap: 15px; justify-content: center; margin-top: 25px; }
+    .btn-yes { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; }
+    .btn-no { background: var(--ai-bubble); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; }
+    .btn-yes:hover { transform: scale(1.05); background: #dc2626; }
+    .btn-no:hover { transform: scale(1.05); background: var(--primary-blue); }
+
+    /* CHATBOX VISUAL UPDATES (TASK 2) */
+    .ai-header-main { display: flex; flex-direction: column; }
+    .powered-by { font-size: 10px; color: var(--muted-text); font-weight: normal; margin-top: 2px; }
+    .ai-intro { font-size: 14px; color: var(--light-text); margin-bottom: 15px; line-height: 1.4; }
+    .chat-contact-info { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 20px; }
+    .contact-title { font-size: 14px; color: white; font-weight: 600; margin-bottom: 8px; }
+    .contact-item { font-size: 12px; color: var(--light-text); display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .contact-item i { color: var(--important-yellow); font-size: 14px; }
+    .quick-questions-title { font-size: 14px; color: white; margin-bottom: 10px; font-weight: 600; }
+    .quick-btn {
+        width: 100%; text-align: left; padding: 10px 15px; background: var(--card-bg);
+        border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;
+        margin-bottom: 8px; cursor: pointer; transition: 0.3s; font-size: 13px; font-family: 'Exo 2';
+    }
+    .quick-btn:hover { border-color: var(--tech-blue); background: rgba(255,255,255,0.05); }
+    /* NEW CODE END */
+    </style>
+</head>
+<body>
+
+    <div class="tech-background">
+        <div class="grid-lines"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <div id="customConfirmOverlay">
+        <div class="confirm-box">
+            <div class="confirm-title">Do you want to cancel?</div>
+            <p style="color: var(--light-text); font-size: 14px;">This will remove your current appointment request permanently.</p>
+            <div class="confirm-btns">
+                <button class="btn-yes" onclick="confirmCancellation()">Yes, Cancel</button>
+                <button class="btn-no" onclick="closeCancelModal()">No, Go Back</button>
+            </div>
+        </div>
+    </div>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo"><img src="{{ url_for('static', filename='images/cubacub_logo_white.png') }}" alt="Logo"></div>
+            <div class="barangay-title">
+                <div class="barangay-name">Barangay Cubacub</div>
+                <div class="portal-name">Digital Portal</div>
+            </div>
+        </div>
+        <ul class="menu">
+            <li><a href="{{ url_for('dashboard') }}"><i class="fa-solid fa-table-columns"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('profile') }}"><i class="fa-solid fa-user"></i> My Profile</a></li>
+            <li><a href="{{ url_for('certificates') }}"><i class="fa-solid fa-file-lines"></i> Certificate Requests</a></li>
+            <li><a href="{{ url_for('concerns') }}"><i class="fa-solid fa-comment-dots"></i> Concerns</a></li>
+            <li class="active"><a href="{{ url_for('appointments') }}"><i class="fa-solid fa-calendar-check"></i> Appointments</a></li>
+            <li><a href="{{ url_for('emergency') }}"><i class="fa-solid fa-clock"></i> Emergency Report</a></li>
+            <li><a href="{{ url_for('announcements') }}"><i class="fa-solid fa-bell"></i> Announcements</a></li>
+        </ul>
+        <div class="profile-logout-section">
+            <div class="user-profile">
+                <div class="user-avatar" id="userAvatar">?</div>
+                <div class="user-info">
+                    <div class="name" id="userName">Loading...</div>
+                    <div class="email" id="userEmail">loading@email.com</div>
+                </div>
+            </div>
+            <a href="#" class="logout-btn" onclick="logoutUser()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1>Appointments</h1>
+                <p>Schedule meetings with barangay officials</p>
+            </div>
+            <div id="live-datetime"></div>
+        </div>
+        
+        <div id="emptyState" class="profile-card" style="padding: 80px 30px;">
+            <i class="fa-regular fa-calendar-alt" style="font-size: 80px; color: var(--light-text); opacity: 0.3; margin-bottom: 20px;"></i>
+            <h2>No Appointments Scheduled</h2>
+            <p style="color: var(--light-text); margin-bottom: 25px;">Schedule a meeting with barangay officials</p>
+            <button class="btn-primary" onclick="toggleModal('appointmentModal')">
+                <i class="fa-solid fa-plus"></i> Schedule Appointment
+            </button>
+        </div>
+
+        <div id="pendingState" class="profile-card">
+            <div class="status-badge">Pending Approval</div>
+            <h2 style="color: white; margin-bottom: 25px; text-align: left;">Your Appointment Request</h2>
+            <div class="detail-row"><span class="detail-label">Purpose</span><span class="detail-value" id="resPurpose">-</span></div>
+            <div class="detail-row"><span class="detail-label">Official</span><span class="detail-value" id="resOfficial">-</span></div>
+            <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value" id="resDate">-</span></div>
+            <div class="detail-row"><span class="detail-label">Time</span><span class="detail-value" id="resTime">-</span></div>
+            <button class="btn-primary" style="margin-top: 30px; background: #ef4444; width: 100%;" onclick="cancelAppointment()">Cancel Request</button>
+        </div>
+    </div>
+
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: white; font-family: 'Orbitron';">New Appointment</h2>
+                <span class="close-btn" onclick="toggleModal('appointmentModal')">&times;</span>
+            </div>
+            <form id="appointmentForm">
+                <div class="info-field"><label>Purpose *</label><input type="text" id="apptPurpose" required placeholder="e.g., Legal Advice"></div>
+                <div class="info-field"><label>Official (Optional)</label><input type="text" id="apptOfficial" placeholder="e.g., Captain Cruz"></div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="info-field" style="flex:1;"><label>Date *</label><input type="date" id="apptDate" required></div>
+                    <div class="info-field" style="flex:1;"><label>Time *</label><input type="time" id="apptTime" required></div>
+                </div>
+                <div style="text-align: right; margin-top: 15px;">
+                    <button type="submit" class="btn-primary">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="chat-button" onclick="toggleModal('aiAssistantModal')"><i class="fa-solid fa-comment-dots"></i></div>
+    
+    <div id="aiAssistantModal" class="ai-assistant-modal">
+        <div class="ai-header">
+            <div class="ai-header-main">
+                <div><i class="fa-solid fa-robot"></i> Chatbot Assistant</div>
+                <div class="powered-by">Powered By BantAI</div>
+            </div>
+            <span onclick="toggleModal('aiAssistantModal')" style="cursor:pointer">&times;</span>
+        </div>
+        <div class="ai-body" id="chatMessagesContainer">
+            <div class="ai-intro">I can help you navigate the portal and answer common questions.</div>
+            
+            <div class="chat-contact-info">
+                <div class="contact-title">Need to talk to an official?</div>
+                <div class="contact-item"><i class="fa-solid fa-phone"></i> Barangay Hotline: 0912-345-6789</div>
+                <div class="contact-item"><i class="fa-solid fa-envelope"></i> Email: brgy.cubacub@gmail.com</div>
+            </div>
+
+            <div class="quick-questions-title">Quick Questions to ask:</div>
+            <button class="quick-btn" onclick="quickAsk('How do I request a barangay clearance?')">How do I request a barangay clearance?</button>
+            <button class="quick-btn" onclick="quickAsk('How can I submit a concern?')">How can I submit a concern?</button>
+            <button class="quick-btn" onclick="quickAsk('How do I schedule an appointment?')">How do I schedule an appointment?</button>
+            </div>
+        <div class="ai-footer">
+            <input type="text" id="aiInput" placeholder="Type a message..." onkeypress="if(event.keyCode==13) handleAISubmit()">
+            <button onclick="handleAISubmit()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div id="custom-notification">
+        <i class="fa-solid fa-check-circle"></i>
+        <p id="notification-message">Notification</p>
+    </div>
+
+    <script>
+        // DATE/TIME LOGIC
+        function updateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('live-datetime').innerHTML = `${now.toLocaleDateString('en-US', options)}<br>${now.toLocaleTimeString('en-US')}`;
+        }
+        setInterval(updateTime, 1000); updateTime();
+
+        // INITIAL LOAD & USER INFO
+        document.addEventListener('DOMContentLoaded', function() {
+            const name = localStorage.getItem('loggedInUserName') || 'Trisha Eñovero';
+            document.getElementById('userName').textContent = name;
+            document.getElementById('userEmail').textContent = localStorage.getItem('loggedInUserEmail') || 'trisha@email.com';
+            document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+
+            // CHECK IF WE HAVE A SAVED PENDING APPOINTMENT
+            const saved = localStorage.getItem('pendingAppt');
+            if(saved) {
+                showPendingUI(JSON.parse(saved));
+            }
+        });
+
+        // FORM SUBMISSION LOGIC
+        document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = {
+                purpose: document.getElementById('apptPurpose').value,
+                official: document.getElementById('apptOfficial').value || "Any Official",
+                date: document.getElementById('apptDate').value,
+                time: document.getElementById('apptTime').value
+            };
+            
+            // 1. Save to browser memory
+            localStorage.setItem('pendingAppt', JSON.stringify(data));
+            
+            // 2. Switch UI
+            showPendingUI(data);
+            
+            // 3. Show Success notification
+            showNotification('Request sent! Status: Pending Approval.');
+            
+            // 4. Close Modal
+            toggleModal('appointmentModal');
+        });
+
+        // SWITCH UI TO PENDING STATE
+        function showPendingUI(data) {
+            document.getElementById('resPurpose').innerText = data.purpose;
+            document.getElementById('resOfficial').innerText = data.official;
+            document.getElementById('resDate').innerText = data.date;
+            document.getElementById('resTime').innerText = data.time;
+            
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('pendingState').style.display = 'block';
+        }
+
+        // /* NEW CODE START */
+        // UPDATED CANCELLATION LOGIC
+        function cancelAppointment() {
+            // Task 1: Trigger the Confirmation Modal instead of immediate deletion
+            document.getElementById('customConfirmOverlay').style.display = 'flex';
+        }
+
+        function closeCancelModal() {
+            document.getElementById('customConfirmOverlay').style.display = 'none';
+        }
+
+        function confirmCancellation() {
+            // Task 1: Yes clicked - run actual cancellation
+            localStorage.removeItem('pendingAppt');
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('pendingState').style.display = 'none';
+            showNotification('Appointment request cancelled.');
+            closeCancelModal();
+        }
+
+        // CHAT QUICK QUESTION LOGIC
+        function quickAsk(text) {
+            document.getElementById('aiInput').value = text;
+            handleAISubmit();
+        }
+        // /* NEW CODE END */
+
+        // CHATBOT LOGIC
+        function handleAISubmit() {
+            const input = document.getElementById('aiInput');
+            const msg = input.value.trim();
+            if(!msg) return;
+            const container = document.getElementById('chatMessagesContainer');
+            container.innerHTML += `<div class="chat-message user-message">${msg}</div>`;
+            input.value = '';
+            setTimeout(() => {
+                container.innerHTML += `<div class="chat-message ai-message">Hello! I'm the Brgy Assistant. How can I help you with your appointment today?</div>`;
+                container.scrollTop = container.scrollHeight;
+            }, 600);
+        }
+
+        // UNIVERSAL HELPERS
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            const displayType = (id === 'aiAssistantModal') ? 'flex' : 'block';
+            m.style.display = (m.style.display === 'block' || m.style.display === 'flex') ? 'none' : displayType;
+        }
+
+        function showNotification(msg) {
+            const n = document.getElementById('custom-notification');
+            document.getElementById('notification-message').textContent = msg;
+            n.classList.add('active');
+            setTimeout(() => n.classList.remove('active'), 4000);
+        }
+
+        function logoutUser() { 
+            localStorage.clear(); 
+            window.location.href = "{{ url_for('index') }}"; 
+        }
+    </script>
+</body>
+</html>
